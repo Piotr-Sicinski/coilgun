@@ -51,6 +51,7 @@ class LaserTracker(object):
         self.previous_position = None
         self.trail = numpy.zeros((self.cam_height, self.cam_width, 3),
                                  numpy.uint8)
+        self.exposure = -5
 
     def create_and_position_window(self, name, xpos, ypos):
         """Creates a named widow placing it on the screen at (xpos, ypos)."""
@@ -89,6 +90,7 @@ class LaserTracker(object):
             cv2.cv.CV_CAP_PROP_FRAME_HEIGHT if cv2.__version__.startswith('2') else cv2.CAP_PROP_FRAME_HEIGHT,
             self.cam_height
         )
+
         return self.capture
 
     def handle_quit(self, delay=10):
@@ -231,7 +233,7 @@ class LaserTracker(object):
         if self.enable_graphics:
             self.setup_windows()
         # Set up the camera capture
-        self.setup_camera_capture()
+        self.setup_camera_capture(2)
 
         while True:
             # 1. capture the current image
@@ -321,6 +323,6 @@ def process_run(conn):
         # sat_max=params.satmax,
         # val_min=params.valmin,
         # val_max=params.valmax,
-        enable_graphics=False
+        # enable_graphics=False
     )
     tracker.run(conn)
