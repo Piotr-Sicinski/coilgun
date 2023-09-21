@@ -8,7 +8,7 @@ import numpy
 class LaserTracker(object):
 
     def __init__(self, cam_width=640, cam_height=480, hue_min=20, hue_max=160,
-                 sat_min=100, sat_max=255, val_min=200, val_max=256,
+                 sat_min=100, sat_max=255, val_min=200, val_max=255,
                  display_thresholds=False, enable_graphics=True):
         """
         * ``cam_width`` x ``cam_height`` -- This should be the size of the
@@ -52,6 +52,7 @@ class LaserTracker(object):
         self.trail = numpy.zeros((self.cam_height, self.cam_width, 3),
                                  numpy.uint8)
         self.exposure = -5
+        self.laserFound = False
 
     def create_and_position_window(self, name, xpos, ypos):
         """Creates a named widow placing it on the screen at (xpos, ypos)."""
@@ -102,6 +103,14 @@ class LaserTracker(object):
                                      numpy.uint8)
         if c in ['q', 'Q', chr(27)]:
             sys.exit(0)
+
+        if c == 'n':
+            exp -= 1
+            self.capture.set(cv2.CAP_PROP_EXPOSURE, exp)
+
+        if c == 'm':
+            exp += 1
+            self.capture.set(cv2.CAP_PROP_EXPOSURE, exp)
 
     def threshold_image(self, channel):
         if channel == "hue":
@@ -155,7 +164,8 @@ class LaserTracker(object):
                 center = int(x), int(y)
 
             # only proceed if the radius meets a minimum size
-            if radius > 10:
+            self.laserFound = (radius > 10)
+            if self.laserFound:
                 # draw the circle and centroid on the frame,
                 cv2.circle(frame, (int(x), int(y)), int(radius),
                            (0, 255, 255), 2)
@@ -233,7 +243,7 @@ class LaserTracker(object):
         if self.enable_graphics:
             self.setup_windows()
         # Set up the camera capture
-        self.setup_camera_capture(2)
+        self.setup_camera_capture(1)
 
         while True:
             # 1. capture the current image
@@ -246,7 +256,7 @@ class LaserTracker(object):
             if self.enable_graphics:
                 self.display(hsv_image, frame)
             if conn:
-                if self.previous_position:
+                if self.laserFound and self.previous_position:
                     x = self.previous_position[0] - self.cam_width // 2
                     y = -(self.previous_position[1] - self.cam_height // 2)
                     conn.send((x, y))
@@ -266,15 +276,15 @@ if __name__ == '__main__':
                         type=int,
                         help='Camera Height')
     parser.add_argument('-u', '--huemin',
-                        default=20,
+                        default=45,
                         type=int,
                         help='Hue Minimum Threshold')
     parser.add_argument('-U', '--huemax',
-                        default=160,
+                        default=75,
                         type=int,
                         help='Hue Maximum Threshold')
     parser.add_argument('-s', '--satmin',
-                        default=100,
+                        default=120,
                         type=int,
                         help='Saturation Minimum Threshold')
     parser.add_argument('-S', '--satmax',
@@ -293,8 +303,7 @@ if __name__ == '__main__':
                         action='store_true',
                         help='Display Threshold Windows')
     parser.add_argument('-g', '--graphics',
-                        default=True,
-                        type=bool,
+                        action='store_false',
                         help='Display Windows')
     params = parser.parse_args()
 
@@ -310,6 +319,8 @@ if __name__ == '__main__':
         display_thresholds=params.display,
         enable_graphics=params.graphics
     )
+
+    print(params.graphics)
     tracker.run()
 
 
@@ -319,7 +330,7 @@ def process_run(conn):
         cam_height=480,
         hue_min=45,
         hue_max=75,
-        # sat_min=params.satmin,
+        sat_min=20,
         # sat_max=params.satmax,
         # val_min=params.valmin,
         # val_max=params.valmax,

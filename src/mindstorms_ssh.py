@@ -3,6 +3,15 @@ import time
 from simple_pid import PID
 
 
+def process_run_deg_table(conn):
+    while True:
+        x, y = conn.recv()
+        if not x:
+            continue
+
+        print(x)
+
+
 def process_run_test_print(conn):
     while True:
         xy = conn.recv()
@@ -52,38 +61,11 @@ def main():
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh_client.connect('ev3dev', port=22, username='robot', password='maker')
+    # ssh_client.connect('10.42.0.4', port=22, username='robot', password='maker')
 
     # Wykonanie poleceń zdalnych
-    # stdin, stdout, stderr = ssh_client.exec_command('ls')
-    # print(stdout.read().decode())
-
-    # testSSHSpeed2(ssh_client)
-
-    # Otwarcie sesji SSH
-    ssh_session = ssh_client.invoke_shell()
-    time.sleep(2)
-    ssh_session.recv(1024).decode('utf-8')
-
-    # Wysłanie poleceń
-    commands = ['ls', 'pwd', 'echo "Hello, World!"']
-    output = ''
-    c = 0
-    for cmd in commands:
-        ssh_session.send(cmd + '\n')
-        time.sleep(0.1)
-        while True:
-            if ssh_session.recv_ready():
-                c += 1
-                response = ssh_session.recv(1024).decode('utf-8')
-                output += response
-                if cmd in response:
-                    break
-
-    # Wyświetlenie wyników (bez znaku zachęty)
-    print(output.strip(), c)
-
-    # Zamknięcie sesji SSH
-    ssh_session.close()
+    stdin, stdout, stderr = ssh_client.exec_command('ls')
+    print(stdout.read().decode())
 
     # Zamknięcie połączenia SSH
     ssh_client.close()
