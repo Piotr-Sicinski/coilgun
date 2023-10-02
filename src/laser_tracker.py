@@ -84,11 +84,13 @@ class LaserTracker(object):
 
         # set the wanted image size from the camera
         self.capture.set(
-            cv2.cv.CV_CAP_PROP_FRAME_WIDTH if cv2.__version__.startswith('2') else cv2.CAP_PROP_FRAME_WIDTH,
+            cv2.cv.CV_CAP_PROP_FRAME_WIDTH if cv2.__version__.startswith(
+                '2') else cv2.CAP_PROP_FRAME_WIDTH,
             self.cam_width
         )
         self.capture.set(
-            cv2.cv.CV_CAP_PROP_FRAME_HEIGHT if cv2.__version__.startswith('2') else cv2.CAP_PROP_FRAME_HEIGHT,
+            cv2.cv.CV_CAP_PROP_FRAME_HEIGHT if cv2.__version__.startswith(
+                '2') else cv2.CAP_PROP_FRAME_HEIGHT,
             self.cam_height
         )
 
@@ -243,7 +245,7 @@ class LaserTracker(object):
         if self.enable_graphics:
             self.setup_windows()
         # Set up the camera capture
-        self.setup_camera_capture(1)
+        self.setup_camera_capture(0)
 
         while True:
             # 1. capture the current image
@@ -334,6 +336,6 @@ def process_run(conn):
         # sat_max=params.satmax,
         # val_min=params.valmin,
         # val_max=params.valmax,
-        # enable_graphics=False
+        enable_graphics=False
     )
     tracker.run(conn)

@@ -1,15 +1,9 @@
 import paramiko
-import time
 from simple_pid import PID
-
-
-def process_run_deg_table(conn):
-    while True:
-        x, y = conn.recv()
-        if not x:
-            continue
-
-        print(x)
+import socket
+import struct
+from time import sleep
+from math import sin
 
 
 def process_run_test_print(conn):
@@ -21,14 +15,38 @@ def process_run_test_print(conn):
             print("none")
 
 
+def mindstorms_ssh_process_run_turret(conn):
+    # Konfiguracja klienta
+    host = '10.42.0.4'  # Adres urządzenia
+    # host = '192.168.137.3'
+    port = 2345
+
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.connect((host, port))
+
+    def_data = (0, 0)
+
+    while True:
+        xy = conn.recv()  # tuple (x,y)
+        if xy == None:
+            xy = def_data
+
+        message = struct.pack('!hh', *xy)
+        client_socket.send(message)
+
+        # sleep(STEP)
+
+    client_socket.close()
+
+
 def testSSHSpeed1(ssh_client):
-    start_time = time.time()
+    start_time = time()
 
     N = 100
     for _ in range(N):
         stdin, stdout, stderr = ssh_client.exec_command('ls')
 
-    execution_time = time.time() - start_time
+    execution_time = time() - start_time
 
     print(f"Czas wykonywania: {execution_time/N} sekundy")
 

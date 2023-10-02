@@ -52,9 +52,15 @@ while True:
     # obrMotor1.track_target(x)
     # obrMotor2.track_target(x)
     # nachMotor.track_target(x)
-    obrMotor1.run_angle(100, x, wait=False)
-    obrMotor2.run_angle(100, x, wait=False)
-    nachMotor.run_angle(100, -y, wait=False)
+    # obrMotor1.run_angle(500, x, wait=False)
+    # obrMotor2.run_angle(500, x, wait=False)
+    # nachMotor.run_angle(500, -y, wait=False)
+
+    obrMotor1.run(1.5*x)
+    obrMotor2.run(1.5*x)
+    nachMotor.run(-1.5*y)
+
+    # print(nachMotor.angle())
 
 
 client_socket.close()

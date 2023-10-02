@@ -1,39 +1,21 @@
-from threading import Thread
-import cv2
-import time
+# import json
 
+# data_to_send = (None, None)
+# data_bytes = json.dumps(data_to_send)
 
-class ThreadedCamera(object):
-    def __init__(self, src=0):
-        self.capture = cv2.VideoCapture(src)
-        self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 2)
+# print(data_bytes.encode('utf-8'))
 
-        # FPS = 1/X
-        # X = desired FPS
-        self.FPS = 1/30
-        self.FPS_MS = int(self.FPS * 1000)
+# received_data = data_bytes
 
-        # Start frame retrieval thread
-        self.thread = Thread(target=self.update, args=())
-        self.thread.daemon = True
-        self.thread.start()
+# received_tuple = json.loads(received_data)
+# print(f"Received tuple: {received_tuple}")
 
-    def update(self):
-        while True:
-            if self.capture.isOpened():
-                (self.status, self.frame) = self.capture.read()
-            time.sleep(self.FPS)
+import struct
 
-    def show_frame(self):
-        cv2.imshow('frame', self.frame)
-        cv2.waitKey(self.FPS_MS)
+data_to_send = (1, -2)
+data_bytes = struct.pack('!hh', *data_to_send)
 
+print(data_bytes)
 
-if __name__ == '__main__':
-    src = 'https://videos3.earthcam.com/fecnetwork/9974.flv/chunklist_w1421640637.m3u8'
-    threaded_camera = ThreadedCamera()
-    while True:
-        try:
-            threaded_camera.show_frame()
-        except AttributeError:
-            pass
+received_tuple = struct.unpack('!hh', data_bytes)
+print(f"Received tuple: {received_tuple}")
