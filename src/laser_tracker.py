@@ -84,12 +84,12 @@ class LaserTracker(object):
 
         # set the wanted image size from the camera
         self.capture.set(
-            cv2.cv.CV_CAP_PROP_FRAME_WIDTH if cv2.__version__.startswith(
+            cv2.cv.CV_CAP_PROP_FRAME_WIDTH if cv2.__version__.startswith(  # type: ignore
                 '2') else cv2.CAP_PROP_FRAME_WIDTH,
             self.cam_width
         )
         self.capture.set(
-            cv2.cv.CV_CAP_PROP_FRAME_HEIGHT if cv2.__version__.startswith(
+            cv2.cv.CV_CAP_PROP_FRAME_HEIGHT if cv2.__version__.startswith(  # type: ignore
                 '2') else cv2.CAP_PROP_FRAME_HEIGHT,
             self.cam_height
         )
@@ -228,7 +228,8 @@ class LaserTracker(object):
             cv2.imshow('Value', self.channels['value'])
 
     def setup_windows(self):
-        sys.stdout.write("Using OpenCV version: {0}\n".format(cv2.__version__))
+        sys.stdout.write("Using OpenCV version: {0}\n".format(
+            cv2.__version__))  # type: ignore
 
         # create output windows
         self.create_and_position_window('LaserPointer', 0, 0)
