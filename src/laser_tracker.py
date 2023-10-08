@@ -40,7 +40,7 @@ class LaserTracker(object):
         self.display_thresholds = display_thresholds
         self.enable_graphics = enable_graphics
 
-        self.capture = None  # camera capture device
+        # self.capture = None  # camera capture device
         self.channels = {
             'hue': None,
             'saturation': None,
@@ -107,12 +107,12 @@ class LaserTracker(object):
             sys.exit(0)
 
         if c == 'n':
-            exp -= 1
-            self.capture.set(cv2.CAP_PROP_EXPOSURE, exp)
+            self.exposure -= 1
+            self.capture.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
 
         if c == 'm':
-            exp += 1
-            self.capture.set(cv2.CAP_PROP_EXPOSURE, exp)
+            self.exposure += 1
+            self.capture.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
 
     def threshold_image(self, channel):
         if channel == "hue":
