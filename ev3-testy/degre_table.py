@@ -48,6 +48,7 @@ while True:
         break
 
     x, y = struct.unpack('!hh', data_bytes)
+    # print(x, y)
 
     # obrMotor1.track_target(x)
     # obrMotor2.track_target(x)
@@ -61,6 +62,7 @@ while True:
     nachMotor.run(-0.5 * y)
 
     xy = obrMotor1.angle(), nachMotor.angle()
+    # print(xy)
 
     message = struct.pack('!hh', *xy)
     client_socket.send(message)
