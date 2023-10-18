@@ -264,7 +264,7 @@ class LaserTracker(object):
                     y = -(self.previous_position[1] - self.cam_height // 2)
                     conn.send((x, y))
                 else:
-                    conn.send(None)
+                    conn.send((None, None))
             self.handle_quit()
 
 
@@ -327,7 +327,7 @@ if __name__ == '__main__':
     tracker.run()
 
 
-def process_run(conn):
+def process_run(conn, en_graphics):
     tracker = LaserTracker(
         cam_width=640,
         cam_height=480,
@@ -337,6 +337,7 @@ def process_run(conn):
         # sat_max=params.satmax,
         # val_min=params.valmin,
         # val_max=params.valmax,
-        enable_graphics=False
+
+        enable_graphics=en_graphics
     )
     tracker.run(conn)

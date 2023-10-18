@@ -1,3 +1,5 @@
+from typing import Tuple, Optional
+from multiprocessing.connection import Connection
 from simple_pid import PID
 import socket
 import struct
@@ -7,18 +9,33 @@ import csv
 
 
 def init_socket() -> socket.socket:
-    # Konfiguracja klienta
     host = '10.42.0.4'  # Adres urządzenia
-    # host = '192.168.137.3'
-    port = 2345
+    port = 23451
+
+    RECONN_NO = 5
+    RECONN_DELAY = 3
 
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect((host, port))
 
-    return client_socket
+    for i in range(RECONN_NO):
+        try:
+            client_socket.connect((host, port))
+        except ConnectionRefusedError:
+            print(f"Host not ready. {i+1}/{RECONN_NO}Reconnecting...")
+            sleep(RECONN_DELAY)
+        else:
+            print(f"Connected to {host}:{port}")
+            return client_socket
+
+    raise ConnectionError("Failed to connect after multiple retries")
 
 
-def process_run_test_print(conn):
+def sendIntTuple(soc: socket.socket, data: Tuple[int, int], cmd=0):
+    message = struct.pack('!hh', *data)
+    soc.send(message)
+
+
+def process_run_test_print(conn: Connection):
     while True:
         xy = conn.recv()
         if xy:
@@ -27,23 +44,77 @@ def process_run_test_print(conn):
             print("none")
 
 
-def process_run_turret(conn):
+def process_run_turret(conn: Connection):
     client_socket = init_socket()
-
-    def_data = (0, 0)
 
     while True:
         xy = conn.recv()  # tuple (x,y)
-        if xy == None:
-            xy = def_data
+        if not xy:
+            break
+        if xy == (None, None):
+            xy = 0, 0
 
-        message = struct.pack('!hh', *xy)
-        client_socket.send(message)
+        sendIntTuple(client_socket, xy)
 
     client_socket.close()
 
 
-def process_run_degree_table(conn):
+def process_run_pid(conn: Connection):
+    client_socket = init_socket()
+
+    p = -1
+    i = -0.5
+    d = 0
+    pid = PID(p, i, d, setpoint=0)
+
+    while True:
+        xy = conn.recv()  # tuple (x,y)
+        if not xy:
+            break
+
+        if xy == (None, None):
+            xy = 0, 0
+        else:
+            control = pid(xy[1])
+            xy = 0, (round(control) if control else 0)
+
+        sendIntTuple(client_socket, xy)
+
+    client_socket.close()
+
+
+def test_slow_movement():
+    client_socket = init_socket()
+
+    x, y = 0, 0
+
+    SLEEP_TIME = 0.5
+
+    while True:
+        try:
+
+            user_input = input("Enter an X speed (or press 'q' to quit): ")
+            if user_input.lower() == 'q':
+                break  # Exit the loop if the user enters 'exit'
+
+            x = int(user_input) if user_input else x
+
+            user_input = input("Enter an Y speed: ")
+            y = int(user_input) if user_input else y
+
+            sendIntTuple(client_socket, (x, y))
+            sleep(SLEEP_TIME)
+            sendIntTuple(client_socket, (-x, -y))
+            sleep(SLEEP_TIME)
+            sendIntTuple(client_socket, (0, 0))
+
+        except ValueError:
+            print("Invalid input. Please enter a valid integer.")
+
+    client_socket.close()
+
+
+def process_run_degree_table(conn: Connection):
 
     def set_to_xy(dest_x, dest_y):
         start_time = time()
@@ -55,8 +126,7 @@ def process_run_degree_table(conn):
             else:
                 xy = xy[0] - dest_x, xy[1] - dest_y
 
-            message = struct.pack('!hh', *xy)
-            client_socket.send(message)
+            sendIntTuple(client_socket, xy)
 
             data_bytes = client_socket.recv(1024)
             x_deg, y_deg = struct.unpack('!hh', data_bytes)
@@ -93,8 +163,7 @@ def process_run_degree_table(conn):
 
             fake_xy = SLOW_SPEED * x_enable, SLOW_SPEED * y_enable
 
-            message = struct.pack('!hh', *fake_xy)
-            client_socket.send(message)
+            sendIntTuple(client_socket, xy)
 
             data_bytes = client_socket.recv(1024)
             x_deg, y_deg = struct.unpack('!hh', data_bytes)
@@ -121,3 +190,7 @@ def process_run_degree_table(conn):
         writer = csv.writer(file)
         writer.writerow(width_tab)
         writer.writerow(height_tab)
+
+
+if __name__ == "__main__":
+    test_slow_movement()
